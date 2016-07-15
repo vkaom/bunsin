@@ -1,0 +1,20 @@
+actor: Tester
+paths:
+  tests: ../Tests
+  log: ../../../../typo3temp/var/tests
+  data: Configuration/Acceptance/Data
+  support: Configuration/Acceptance/Support
+  envs: Configuration/Acceptance/Envs
+settings:
+  colors: true
+  memory_limit: 1024M
+extensions:
+  enabled:
+    - Codeception\Extension\Phantoman
+    - Codeception\Extension\RunFailed
+    - Codeception\Extension\Recorder
+    - TYPO3\CMS\Core\Tests\AcceptanceCoreEnvironment
+  config:
+    Codeception\Extension\Phantoman:
+      path: 'bin/phantomjs'
+      port: 4445

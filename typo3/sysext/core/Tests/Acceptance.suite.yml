@@ -1,0 +1,29 @@
+class_name: AcceptanceTester
+modules:
+  enabled:
+    - WebDriver
+    - \Helper\Acceptance
+    - Asserts
+  config:
+    WebDriver:
+      url: http://localhost:8000/typo3temp/var/tests/acceptance
+      browser: phantomjs
+      port: 4445
+      window_size: 1440x570
+      wait: 1
+      restart: true
+      capabilities:
+        # Disable the "scroll to element before clicking" behavior as this breaks tests
+        # where for example a fixed docbar is used. Selenium scrolls to the element before
+        # clicking it and then complains that it can't click the element because another elemnt
+        # is overlaying it.
+        # You have to ensure that the element is in the viewport by your own before clicking it!
+        # You can simply do that by scrolling to it.
+        elementScrollBehavior: 1
+env:
+  firefox:
+    modules:
+      config:
+        WebDriver:
+          browser: firefox
+          port: 4444
