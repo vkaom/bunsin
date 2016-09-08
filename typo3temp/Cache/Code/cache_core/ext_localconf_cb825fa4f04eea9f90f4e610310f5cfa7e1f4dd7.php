@@ -819,6 +819,65 @@ $GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauth.php']['log
 
 
 /**
+ * Extension: css_styled_content
+ * File: F:/camemis_website/typo3/sysext/css_styled_content/ext_localconf.php
+ */
+
+$_EXTKEY = 'css_styled_content';
+$_EXTCONF = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$_EXTKEY];
+
+
+defined('TYPO3_MODE') or die();
+
+// Get the extension configuration
+$extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$_EXTKEY]);
+
+// Disable image positions that make no sense on CType=image (it leaves just "above left", "center" and "right")
+\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig('
+	TCEFORM.tt_content.imageorient.types.image.removeItems = 8,9,10,17,18,25,26
+');
+
+// Mark the delivered TypoScript templates as "content rendering template" (providing the hooks of "static template 43" = content (default))
+$GLOBALS['TYPO3_CONF_VARS']['FE']['contentRenderingTemplates'][] = 'cssstyledcontent/static/';
+$GLOBALS['TYPO3_CONF_VARS']['FE']['contentRenderingTemplates'][] = 'cssstyledcontent/static/v6.2/';
+
+// Register for hook to show preview of tt_content element of CType="image" in page module
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['tt_content_drawItem']['image'] =
+    \TYPO3\CMS\CssStyledContent\Hooks\PageLayoutView\ImagePreviewRenderer::class;
+
+// Register for hook to show preview of tt_content element of CType="textpic" in page module
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['tt_content_drawItem']['textpic'] =
+    \TYPO3\CMS\CssStyledContent\Hooks\PageLayoutView\TextpicPreviewRenderer::class;
+
+// Register for hook to show preview of tt_content element of CType="text" in page module
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['tt_content_drawItem']['text'] =
+    \TYPO3\CMS\CssStyledContent\Hooks\PageLayoutView\TextPreviewRenderer::class;
+
+if (TYPO3_MODE === 'BE') {
+    call_user_func(
+        function ($extKey) {
+            // Get the extension configuration
+            $extConf = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$extKey]);
+
+            if (!isset($extConf['loadContentElementWizardTsConfig']) || (int)$extConf['loadContentElementWizardTsConfig'] === 1) {
+                // Include new content elements to modWizards
+                \TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addPageTSConfig('<INCLUDE_TYPOSCRIPT: source="FILE:EXT:css_styled_content/Configuration/PageTSconfig/NewContentElementWizard.ts">');
+            }
+
+            $dispatcher = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\SignalSlot\Dispatcher::class);
+            $dispatcher->connect(
+                \TYPO3\CMS\Extensionmanager\Controller\ConfigurationController::class,
+                'afterExtensionConfigurationWrite',
+                \TYPO3\CMS\CssStyledContent\Hooks\TcaCacheClearing::class,
+                'clearTcaCache'
+            );
+        },
+        $_EXTKEY
+    );
+}
+
+
+/**
  * Extension: felogin
  * File: F:/camemis_website/typo3/sysext/felogin/ext_localconf.php
  */
@@ -1112,6 +1171,245 @@ $GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['nodeRegistry'][1433089350] = a
     'priority' => 40,
     'class' => \TYPO3\CMS\T3editor\Form\Element\T3editorElement::class,
 );
+
+
+/**
+ * Extension: flux
+ * File: F:/camemis_website/typo3conf/ext/flux/ext_localconf.php
+ */
+
+$_EXTKEY = 'flux';
+$_EXTCONF = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$_EXTKEY];
+
+
+if (!defined('TYPO3_MODE')) {
+	die('Access denied.');
+}
+
+if (!(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_INSTALL)) {
+	$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['flux']['setup'] = unserialize($_EXTCONF);
+
+	// Configure the CompatibilityRegistry so it will return the right values based on TYPO3 version:
+
+	// Preview class name (expecting needed changes on TYPO3 8.0+)
+	\FluidTYPO3\Flux\Utility\CompatibilityRegistry::register(
+		'FluidTYPO3\\Flux\\Backend\\Preview',
+		array(
+			'7.6.0' => 'FluidTYPO3\\Flux\\Backend\\Preview'
+		)
+	);
+
+	// FormEngine requires "TCEforms" dimension (expecting change on future TYPO3 versions)
+	\FluidTYPO3\Flux\Utility\CompatibilityRegistry::register(
+		'FluidTYPO3\\Flux\\Backend\\DynamicFlexForm::NEEDS_TCEFORMS_WRAPPER',
+		array(
+			'7.6.0' => TRUE
+		)
+	);
+
+	// Hook class which generates icons for "tt_content" editing views
+	\FluidTYPO3\Flux\Utility\CompatibilityRegistry::register(
+		'FluidTYPO3\\Flux\\Hooks\\ContentIconHookSubscriber->addSubIcon',
+		array(
+			'7.6.0' => 'FluidTYPO3\\Flux\\Hooks\\ContentIconHookSubscriber->addSubIcon'
+		)
+	);
+
+	\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin('FluidTYPO3.Flux', 'API', array('Flux' => 'renderChildContent'), array());
+
+	\TYPO3\CMS\Core\Utility\ExtensionManagementUtility::addTypoScript($_EXTKEY, 'setup', '
+		plugin.tx_flux.view {
+			templateRootPath = EXT:flux/Resources/Private/Templates/
+			partialRootPath = EXT:flux/Resources/Private/Partials/
+			layoutRootPath = EXT:flux/Resources/Private/Layouts/
+		}
+		plugin.tx_flux.settings {
+			flexform {
+				rteDefaults = richtext:rte_transform[flag=rte_enabled|mode=ts_css]
+			}
+		}
+	');
+
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_befunc.php']['getFlexFormDSClass']['flux'] = 'FluidTYPO3\Flux\Backend\DynamicFlexForm';
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processDatamapClass'][] = 'FluidTYPO3\Flux\Backend\TceMain';
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['processCmdmapClass'][] = 'FluidTYPO3\Flux\Backend\TceMain';
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['moveRecordClass'][] = 'FluidTYPO3\Flux\Backend\TceMain';
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clearCachePostProc'][] = 'FluidTYPO3\Flux\Backend\TceMain->clearCacheCommand';
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tstemplate.php']['includeStaticTypoScriptSources']['flux'] = 'FluidTYPO3\Flux\Backend\TypoScriptTemplate->preprocessIncludeStaticTypoScriptSources';
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['extTablesInclusion-PostProcessing']['flux'] = 'FluidTYPO3\Flux\Backend\TableConfigurationPostProcessor';
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/class.tx_cms_layout.php']['tt_content_drawItem']['flux'] = \FluidTYPO3\Flux\Utility\CompatibilityRegistry::get('FluidTYPO3\\Flux\\Backend\\Preview');
+
+	if (TRUE === class_exists('FluidTYPO3\Flux\Core')) {
+		\FluidTYPO3\Flux\Core::registerConfigurationProvider('FluidTYPO3\Flux\Provider\ContentProvider');
+
+		// native Outlets, replaceable by short name in subsequent registerOutlet() calls by adding second argument (string, name of type)
+		\FluidTYPO3\Flux\Core::registerOutlet('standard');
+
+		// native Pipes, replaceable by short name in subsequent registerPipe() calls by adding second argument (string, name of type)
+		\FluidTYPO3\Flux\Core::registerPipe('standard');
+		\FluidTYPO3\Flux\Core::registerPipe('controller');
+		\FluidTYPO3\Flux\Core::registerPipe('email');
+		\FluidTYPO3\Flux\Core::registerPipe('flashMessage');
+		\FluidTYPO3\Flux\Core::registerPipe('typeConverter');
+	}
+
+	/** @var $extbaseObjectContainer \TYPO3\CMS\Extbase\Object\Container\Container */
+	$extbaseObjectContainer = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance('TYPO3\CMS\Extbase\Object\Container\Container');
+	$extbaseObjectContainer->registerImplementation('TYPO3\CMS\Extbase\Configuration\ConfigurationManagerInterface', 'FluidTYPO3\Flux\Configuration\ConfigurationManager');
+	unset($extbaseObjectContainer);
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms']['db_new_content_el']['wizardItemsHook']['flux'] = 'FluidTYPO3\Flux\Hooks\WizardItemsHookSubscriber';
+	$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['recStatInfoHooks']['flux'] = \FluidTYPO3\Flux\Utility\CompatibilityRegistry::get('FluidTYPO3\\Flux\\Hooks\\ContentIconHookSubscriber->addSubIcon');
+
+	if (isset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['flux']['setup']['listNestedContent']) && !(boolean)$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['flux']['setup']['listNestedContent']) {
+		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['typo3/class.db_list_extra.inc']['getTable']['flux'] = 'FluidTYPO3\Flux\Hooks\RecordListGetTableHookSubscriber';
+	}
+
+	$GLOBALS['TYPO3_CONF_VARS']['SYS']['formEngine']['formDataGroup']['tcaDatabaseRecord'][\FluidTYPO3\Flux\Backend\FormEngine\ProviderProcessor::class] = array(
+		'depends' => array(
+			\TYPO3\CMS\Backend\Form\FormDataProvider\PageTsConfig::class,
+			\TYPO3\CMS\Backend\Form\FormDataProvider\TcaColumnsProcessCommon::class,
+			\TYPO3\CMS\Backend\Form\FormDataProvider\TcaColumnsProcessShowitem::class
+		),
+		'before' => array(
+			\TYPO3\CMS\Backend\Form\FormDataProvider\TcaColumnsRemoveUnused::class
+		)
+	);
+}
+
+if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['flux'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['flux'] = array(
+		'frontend' => 'TYPO3\\CMS\\Core\\Cache\\Frontend\\VariableFrontend',
+		'groups' => array('system')
+	);
+}
+
+
+/**
+ * Extension: fluidcontent
+ * File: F:/camemis_website/typo3conf/ext/fluidcontent/ext_localconf.php
+ */
+
+$_EXTKEY = 'fluidcontent';
+$_EXTCONF = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$_EXTKEY];
+
+
+if (!defined ('TYPO3_MODE')) {
+	die ('Access denied.');
+}
+
+if (!(TYPO3_REQUESTTYPE & TYPO3_REQUESTTYPE_INSTALL)) {
+	\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+		'FluidTYPO3.Fluidcontent',
+		'Content',
+		array(
+			'Content' => 'render',
+		),
+		array(),
+		\TYPO3\CMS\Extbase\Utility\ExtensionUtility::PLUGIN_TYPE_CONTENT_ELEMENT
+	);
+
+	\FluidTYPO3\Flux\Core::registerConfigurationProvider('FluidTYPO3\Fluidcontent\Provider\ContentProvider');
+	\FluidTYPO3\Flux\Core::registerConfigurationProvider('FluidTYPO3\Fluidcontent\Provider\BackendUserGroupProvider');
+
+	if ('BE' === TYPO3_MODE) {
+		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms']['db_new_content_el']['wizardItemsHook']['fluidcontent'] = 'FluidTYPO3\Fluidcontent\Hooks\WizardItemsHookSubscriber';
+		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_userauthgroup.php']['fetchGroups_postProcessing']['fluidcontent'] = 'FluidTYPO3\Fluidcontent\Hooks\GroupAccessListPostProcessor->addAccessLists';
+		$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['GLOBAL']['extTablesInclusion-PostProcessing']['fluidcontent'] = 'FluidTYPO3\Fluidcontent\Backend\TableConfigurationPostProcessor';
+	}
+}
+
+if (!is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['fluidcontent'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['fluidcontent'] = array(
+		'groups' => array('system')
+	);
+}
+
+
+/**
+ * Extension: fluidpages
+ * File: F:/camemis_website/typo3conf/ext/fluidpages/ext_localconf.php
+ */
+
+$_EXTKEY = 'fluidpages';
+$_EXTCONF = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$_EXTKEY];
+
+
+if (!defined ('TYPO3_MODE')) {
+	die ('Access denied.');
+}
+$GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['fluidpages']['setup'] = unserialize($_EXTCONF);
+
+if (FALSE === isset($GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['fluidpages']['setup']['autoload'])
+	|| TRUE === (boolean) $GLOBALS['TYPO3_CONF_VARS']['EXTCONF']['fluidpages']['setup']['autoload']) {
+    \FluidTYPO3\Flux\Core::addStaticTypoScript('EXT:fluidpages/Configuration/TypoScript/');
+}
+
+\FluidTYPO3\Flux\Core::registerConfigurationProvider('FluidTYPO3\Fluidpages\Provider\PageProvider');
+\FluidTYPO3\Flux\Core::registerConfigurationProvider('FluidTYPO3\Fluidpages\Provider\SubPageProvider');
+\FluidTYPO3\Flux\Core::registerConfigurationProvider('FluidTYPO3\Fluidpages\Provider\PageLanguageOverlayProvider');
+\FluidTYPO3\Flux\Core::registerConfigurationProvider('FluidTYPO3\Fluidpages\Provider\SubPageLanguageOverlayProvider');
+
+\TYPO3\CMS\Extbase\Utility\ExtensionUtility::configurePlugin(
+	'FluidTYPO3.Fluidpages',
+	'Page',
+	array(
+		'Page' => 'render,error',
+	),
+	array(
+	),
+	\TYPO3\CMS\Extbase\Utility\ExtensionUtility::PLUGIN_TYPE_PLUGIN
+);
+
+$GLOBALS['TYPO3_CONF_VARS']['FE']['addRootLineFields'] .= ($GLOBALS['TYPO3_CONF_VARS']['FE']['addRootLineFields'] == '' ? '' : ',') .
+	'tx_fed_page_controller_action,tx_fed_page_controller_action_sub,tx_fed_page_flexform,tx_fed_page_flexform_sub,';
+
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['BackendLayoutDataProvider']['fluidpages'] = 'FluidTYPO3\Fluidpages\Backend\BackendLayoutDataProvider';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['cms/layout/db_layout.php']['drawHeaderHook'][] = \FluidTYPO3\Fluidpages\Hooks\PagePreviewRenderer::class . '->render';
+
+
+/**
+ * Extension: vhs
+ * File: F:/camemis_website/typo3conf/ext/vhs/ext_localconf.php
+ */
+
+$_EXTKEY = 'vhs';
+$_EXTCONF = $GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf'][$_EXTKEY];
+
+
+if (!defined('TYPO3_MODE')) {
+	die('Access denied.');
+}
+
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['usePageCache'][] = 'FluidTYPO3\\Vhs\\Service\\AssetService';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['tslib/class.tslib_fe.php']['contentPostProc-output'][] = 'FluidTYPO3\\Vhs\\Service\\AssetService->buildAllUncached';
+$GLOBALS['TYPO3_CONF_VARS']['SC_OPTIONS']['t3lib/class.t3lib_tcemain.php']['clearCachePostProc'][] = 'FluidTYPO3\\Vhs\\Service\\AssetService->clearCacheCommand';
+$GLOBALS['TYPO3_CONF_VARS']['FE']['addRootLineFields'] .= (TRUE === empty($GLOBALS['TYPO3_CONF_VARS']['FE']['addRootLineFields']) ? '' : ',') . 'nav_hide';
+
+if (FALSE === is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['vhs_main'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['vhs_main'] = [
+		'frontend' => 'TYPO3\\CMS\\Core\\Cache\\Frontend\\StringFrontend',
+		'options' => [
+			'defaultLifetime' => 804600
+		],
+		'groups' => ['pages', 'all']
+	];
+}
+
+if (FALSE === is_array($GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['vhs_markdown'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['SYS']['caching']['cacheConfigurations']['vhs_markdown'] = [
+		'frontend' => 'TYPO3\\CMS\\Core\\Cache\\Frontend\\StringFrontend',
+		'options' => [
+			'defaultLifetime' => 804600
+		],
+		'groups' => ['pages', 'all']
+	];
+}
+
+// add url and urltype to fix the rendering of external url doktypes
+if (FALSE === empty($GLOBALS['TYPO3_CONF_VARS']['FE']['addRootLineFields'])) {
+	$GLOBALS['TYPO3_CONF_VARS']['FE']['addRootLineFields'] .= ',';
+}
+$GLOBALS['TYPO3_CONF_VARS']['FE']['addRootLineFields'] .= 'url,urltype';
 
 
 #

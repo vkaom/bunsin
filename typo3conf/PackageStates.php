@@ -144,6 +144,12 @@ return [
             'packagePath' => 'typo3/sysext/cshmanual/',
             'suggestions' => [],
         ],
+        'css_styled_content' => [
+            'composerName' => 'typo3/cms-css-styled-content',
+            'state' => 'active',
+            'packagePath' => 'typo3/sysext/css_styled_content/',
+            'suggestions' => [],
+        ],
         'felogin' => [
             'composerName' => 'typo3/cms-felogin',
             'state' => 'active',
@@ -240,16 +246,52 @@ return [
             'packagePath' => 'typo3/sysext/viewpage/',
             'suggestions' => [],
         ],
+        'flux' => [
+            'composerName' => 'fluidtypo3/flux',
+            'state' => 'active',
+            'packagePath' => 'typo3conf/ext/flux/',
+            'suggestions' => [],
+        ],
+        'fluidcontent' => [
+            'composerName' => 'fluidtypo3/fluidcontent',
+            'state' => 'active',
+            'packagePath' => 'typo3conf/ext/fluidcontent/',
+            'suggestions' => [],
+        ],
+        'fluidpages' => [
+            'composerName' => 'fluidtypo3/fluidpages',
+            'state' => 'active',
+            'packagePath' => 'typo3conf/ext/fluidpages/',
+            'suggestions' => [],
+        ],
+        'camemis_package' => [
+            'composerName' => 'camemis_package',
+            'state' => 'active',
+            'packagePath' => 'typo3conf/ext/camemis_package/',
+            'suggestions' => [],
+        ],
+        'extension_builder' => [
+            'composerName' => 'ebt/extension_builder',
+            'state' => 'active',
+            'packagePath' => 'typo3conf/ext/extension_builder/',
+            'suggestions' => [],
+        ],
+        'fluid_contentelements' => [
+            'composerName' => 'appzap/fluid-contentelements',
+            'state' => 'active',
+            'packagePath' => 'typo3conf/ext/fluid_contentelements/',
+            'suggestions' => [],
+        ],
+        'vhs' => [
+            'composerName' => 'fluidtypo3/vhs',
+            'state' => 'active',
+            'packagePath' => 'typo3conf/ext/vhs/',
+            'suggestions' => [],
+        ],
         'adodb' => [
             'composerName' => 'typo3/cms-adodb',
             'state' => 'inactive',
             'packagePath' => 'typo3/sysext/adodb/',
-            'suggestions' => [],
-        ],
-        'css_styled_content' => [
-            'composerName' => 'typo3/cms-css-styled-content',
-            'state' => 'inactive',
-            'packagePath' => 'typo3/sysext/css_styled_content/',
             'suggestions' => [],
         ],
         'dbal' => [

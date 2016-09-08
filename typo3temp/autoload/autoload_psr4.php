@@ -5,4 +5,10 @@
 $typo3InstallDir = PATH_site;
 
 return array(
+    'EBT\\ExtensionBuilder\\' => array($typo3InstallDir . 'typo3conf/ext/extension_builder/Classes'),
+    'FluidTYPO3\\Fluidcontent\\' => array($typo3InstallDir . 'typo3conf/ext/fluidcontent/Classes'),
+    'FluidTYPO3\\Fluidpages\\' => array($typo3InstallDir . 'typo3conf/ext/fluidpages/Classes'),
+    'FluidTYPO3\\Flux\\' => array($typo3InstallDir . 'typo3conf/ext/flux/Classes'),
+    'FluidTYPO3\\Vhs\\' => array($typo3InstallDir . 'typo3conf/ext/vhs/Classes'),
+    'PhpParser\\' => array($typo3InstallDir . 'typo3conf/ext/extension_builder/Resources/Private/PHP/PHP-Parser/lib/PhpParser'),
 );

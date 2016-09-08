@@ -277,5 +277,6 @@ $GLOBALS['TBE_STYLES']['spriteIconApi']['iconsAvailable'] = array (
   274 => 'module-tools',
   275 => 'module-user',
   276 => 'module-help',
+  277 => 'tcarecords-pages-187',
 );
 #
